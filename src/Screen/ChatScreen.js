@@ -1,8 +1,7 @@
-import React,{useState,useEffect} from 'react';
-import MoreVertIcon from '@material-ui/icons/MoreVert';
+import React, {useState, useEffect} from 'react';
 import './ChatScreen.css'
 import { Avatar, IconButton } from '@material-ui/core';
-import { AttachFile, SearchOutlined } from '@material-ui/icons';
+import { AttachFile,MoreVert, SearchOutlined, Message } from '@material-ui/icons';
 import InsertEmoticonIcon from '@material-ui/icons/InsertEmoticon';
 import MicIcon from '@material-ui/icons/Mic';
 import {useParams} from 'react-router-dom';
@@ -21,12 +20,17 @@ function ChatScreen() {
 
     useEffect(()=> {
         if(roomId){
-            db.collection("rooms").doc(roomId).onSnapshot((snapshot) => 
-                setRoomName(snapshot.data().name))
-            db.collection("rooms").doc(roomId).
-            collection("messages").onSnapshot(snapshot =>(
-                setMessages(snapshot.docs.map(doc => doc.data()))
-            ))
+            db.collection("rooms")
+              .doc(roomId)
+              .onSnapshot((snapshot) => setRoomName(snapshot.data().name));
+
+            db.collection("rooms")
+              .doc(roomId)
+              .collection("messages")
+              .orderBy("timestamp", "asc")
+              .onSnapshot((snapshot) =>
+                setMessages(snapshot.docs.map((doc) => doc.data())) 
+            );
         }
     }, [roomId])
 
@@ -39,9 +43,11 @@ function ChatScreen() {
     const sendMessage =(e)=>{
         e.preventDefault();
         console.log('you type >>>', input);
+
         db.collection('rooms').doc(roomId).collection('messages').add({
             message : input,
             name: user.displayName,
+            timestamp : firebase.firestore.FieldValue.serverTimestamp()
         })
 
         setInput('');
@@ -53,7 +59,9 @@ function ChatScreen() {
                 <Avatar src={`https://avatars.dicebear.com/api/human/${seed}.svg`}/>
                 <div className="chat__headerInfo">
                     <h3>{roomName}</h3>
-                    <p>Last Seen at ...</p>
+                    <p>Last Seen {""}
+                        {new Date(messages[messages.length -1]?.timestamp?.toDate()).toUTCString()}
+                    </p>
                 </div>
                 <div className="chat__headerRight">
                     <IconButton>
@@ -63,16 +71,18 @@ function ChatScreen() {
                         <AttachFile/> 
                     </IconButton>
                     <IconButton>
-                        <MoreVertIcon/>
+                        <MoreVert/>
                     </IconButton>
                 </div>
             </div>
             <div className="chat__body">
                 {messages.map ((message)=> (
-                     <p className={`chat__message ${message.name === user.displayName && 'chat__receiver'}`}> 
-                     <span className="chat__name">{message.name}</span>
-                     {message.message}
-                     
+                    <p className={`chat__message ${message.name === user.displayName && 'chat__receiver'}`}> 
+                    <span className="chat__name">{message.name}</span>
+                    {message.message}
+                    <span className="chat__timestamp">
+                        {new Date(message.timestamp?.toDate()).toUTCString()}
+                    </span>                  
                  </p>
                  ))}
              </div>            

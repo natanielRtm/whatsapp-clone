@@ -18,8 +18,8 @@ function App() {
       ) : (
         <div className="app__body">
         <Router>
+        <Sidebar/>
           <Switch>
-            <Sidebar/>
             <Route path="/rooms/:roomId">      
               <Chat/>
             </Route>

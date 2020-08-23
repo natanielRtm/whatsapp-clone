@@ -10,11 +10,13 @@ function LoginScreen() {
 
     const signIn = () => {
         auth.signInWithPopup(provider)
-            .then((result) => { dispatch({
+            .then((result) => { 
+                dispatch({
                 type: actionTypes.SET_USER,
-                user:result.user,
-            })})
-            .catch(error => alert(error.message))
+                user: result.user,
+               });
+        })
+            .catch((error) => alert(error.message))
     };
  
     return (
